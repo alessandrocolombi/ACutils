@@ -213,7 +213,6 @@ boxplot_from_matrix = function(data, use_x11_device = TRUE, use_ggplot = TRUE, t
 
   # Turn into data.frame
   df = suppressWarnings ( reshape::melt(data, varnames = c("row.index", "variable")) )#creates a datafram of p*n observations and 3 columns.
-  lv = levels(df$variable)
 
   #Plot 
   if(use_x11_device){
@@ -232,15 +231,38 @@ boxplot_from_matrix = function(data, use_x11_device = TRUE, use_ggplot = TRUE, t
 
 #' Plot boxplot from vectors
 #'
+#' Takes an arbitrary number of vectors and plot the boxplots. When calling this function, any arguments after ... must be fully named. 
+#' @param ... an arbitrary number of vectors. The function does not checks if they are really vectors, so be careful.
+#' @param names the names of the groups of the different boxplots. Not defaulted for safety, can be set to 1:length(...).
+#' @inheritParams ACheatmap
 #' @return this function does not return anything
+#' @examples 
+#' boxplot_from_vectors(v1,v2,v3, names = 1:3)
+#' boxplot_from_vectors(v1,v2,v3, names = c("one","two", "three"), title = "Nice Boxplot")
 #'
 #' @export
-boxplot_from_vectors = function(v1,v2,v3, use_x11_device = TRUE, use_ggplot = TRUE, title = "Title", x_label = "x_axis", y_label = "y_axis"){
+boxplot_from_vectors = function(..., names, use_x11_device = TRUE, use_ggplot = TRUE, title = "Title", x_label = "x_axis", y_label = "y_axis"){
 
-  df = data.frame(value=v1, type = rep("var.1", length(v1)))
-  df = rbind(df, data.frame(value=v2, type = rep("var.2", length(v2))) )
-  df = rbind(df, data.frame(value=v3, type = rep("var.3", length(v3))) )
-
+  #read ...
+  l = list(...)
+  L = length(l)
+  
+  #check length and consistency with names
+  if(L < 1)
+    stop("Number of vectors passed in ... has to be positive")
+  
+  if(L != length(names)){
+    stop('Number of vector in ... is not consistent with the length of names')
+  }
+  
+  #create df for the plot
+  df = data.frame(  value=l[[1]], variable = rep(names[1], length(l[[1]]))  )
+  if(L>1){
+    for(i in 2:L){
+      df = rbind(df, data.frame(  value=l[[i]], variable = rep(names[i], length(l[[i]]))  ) )
+    }
+  }
+  
   #Plot 
   if(use_x11_device){
     x11()
@@ -248,9 +270,10 @@ boxplot_from_vectors = function(v1,v2,v3, use_x11_device = TRUE, use_ggplot = TR
   if(use_ggplot){
     library(ggplot2)
     title_theme = labs(title=title, x=x_label, y=x_label) #FA SCHIFO
-    ggplot(data = df, aes(x = factor(type), y = value, fill = factor(type)) ) + geom_boxplot() + title_theme + theme(panel.background = element_blank())
+    ggplot(data = df, aes(x = factor(variable), y = value, fill = factor(variable)) ) + geom_boxplot() + title_theme + theme(panel.background = element_blank())
   }else{
-    boxplot(value~type, data =  df, main = title, xlab = x_label, ylab = y_label, col = 'red')
+    boxplot(value~variable, data =  df, main = title, xlab = x_label, ylab = y_label ,col = 'red')
   }
-  
+
+
 }

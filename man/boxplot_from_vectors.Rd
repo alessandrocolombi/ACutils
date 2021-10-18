@@ -5,9 +5,8 @@
 \title{Plot boxplot from vectors}
 \usage{
 boxplot_from_vectors(
-  v1,
-  v2,
-  v3,
+  ...,
+  names,
   use_x11_device = TRUE,
   use_ggplot = TRUE,
   title = "Title",
@@ -15,9 +14,27 @@ boxplot_from_vectors(
   y_label = "y_axis"
 )
 }
+\arguments{
+\item{...}{an arbitrary number of vectors. The function does not checks if they are really vectors, so be careful.}
+
+\item{names}{the names of the groups of the different boxplots. Not defaulted for safety, can be set to 1:length(...).}
+
+\item{use_x11_device}{boolean, if x11() device has to be activated or not.}
+
+\item{title}{the title of the plot.}
+
+\item{x_label}{the name of the x-axis in the plot.}
+
+\item{y_label}{the name of the y-axis in the plot.}
+}
 \value{
 this function does not return anything
 }
 \description{
-Plot boxplot from vectors
+Takes an arbitrary number of vectors and plot the boxplots. When calling this function, any arguments after ... must be fully named.
+}
+\examples{
+boxplot_from_vectors(v1,v2,v3, names = 1:3)
+boxplot_from_vectors(v1,v2,v3, names = c("one","two", "three"), title = "Nice Boxplot")
+
 }
