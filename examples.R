@@ -20,5 +20,5 @@ n3 = 10
 v1 = rnorm(n = n1)
 v2 = rnorm(n = n2, mean = 0.5)
 v3 = rnorm(n = n3, sd = 0.75)
-boxplot_from_vectors(v1,v2,v3)
+boxplot_from_vectors(v1,v2,v3, names = 1:3)
 
