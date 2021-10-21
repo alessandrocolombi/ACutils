@@ -11,10 +11,12 @@ Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
+RdMacros: mathjaxr
 Imports: 
     fields (>= 12.5),
     GGally (>= 2.1.2),
     ggplot2 (>= 3.3.5),
+    mathjaxr (>= 1.4-0),
     reshape (>= 0.8.8),
     wesanderson (>= 0.3.6)
 Suggests: 

@@ -274,6 +274,139 @@ boxplot_from_vectors = function(..., names, use_x11_device = TRUE, use_ggplot = 
   }else{
     boxplot(value~variable, data =  df, main = title, xlab = x_label, ylab = y_label ,col = 'red')
   }
+}
 
 
+#' Plot curves
+#'
+#' \loadmathjax This functions gets one or two dataset representig functional data and plot them. It does not smooth the curves, indeed it requires as input the data, not
+#' the regression coefficients. Use \code{\link{smooth_curves}} function for that.
+#' @param data1 matrix of dimension \mjseqn{n\_curves \times n\_grid\_points} representing the first functional dataset to be plotted.
+#' @param data2 matrix of dimension \mjseqn{n\_curves \times n\_grid\_points} representing the second dataset to be plotted, if needed.
+#' @param range the range where the curves has to be plotted. Not needed if \code{n_plot} is 0.
+#' @param n_plot the number of curves to be plotted. Set 0 for no plot.
+#' @param grid_points vector of size \mjseqn{n\_grid\_points} with the points where the splines are evaluated. If defaulted they are uniformly generated. Not needed if \code{n_plot} is 0.
+#' @param internal_knots vector with the internal knots used to construct the splines. Default is null.
+#' If provided, \code{n_basis} are displayed in the plot. The \code{k}-th interval represents the segment where the \code{k}-th spline dominates the others.
+#' @param highlight_band1 a vector that states if a particular band of the plot has to be highlighted. It has to be a vector within the range \mjseqn{\[1,n\_basis\]}.
+#' @param highlight_band2 a vector that states if a particular band of the plot has to be highlighted. It has to be a vector within the range \mjseqn{\[1,n\_basis\]}.
+#' @param title_plot the title of the plot.
+#' @param xtitle the title of the x-axis.
+#' @param ytitle the title of the x-axis.
+#' @param legend_name1 the name for \code{data1} to be printed in the legend. 
+#' @param legend_name2 the name for \code{data2} to be printed in the legend. Used only is two datasets are actually plotted.
+#'
+#' @return No values are returned.
+#' @export
+plot_curves = function( data1, data2 = NULL, range, n_plot = 1, grid_points = NULL,
+                        internal_knots = NULL, highlight_band1 = NULL, highlight_band2 = NULL,
+                        title_plot = "Curves", xtitle = " ", ytitle = " ", legend_name1 = "data1", legend_name2 = "data2")
+{
+  #Plot
+  if(n_plot > 0) #Plot n_plot curves
+  {
+    #Check dimensions
+    if(!(length(range)==2 && range[1] < range[2]))
+      stop("Invalid range, it has to be a vector of length 2 containing first the lower bound of the interval and then the upper bound.")
+    #Computes grid_points
+    if(!is.null(grid_points)){
+      if(length(grid_points) != r)
+        stop("The number of points provided in grid_points is not equal to the size of BaseMat.")
+      X = grid_points;
+    }else{
+      X = seq(range[1], range[2], length.out = r)
+    }
+    #Classical plot, does not depend on the size of the graph
+    if(is.null(internal_knots)){
+      if(n_plot > 1){
+        x11(height=4)
+        matplot( x = X, t(data1[1:n_plot,]), type = 'l', lty = 1,
+                col = c('darkolivegreen','darkgreen','darkolivegreen4','forestgreen'),
+                lwd = 3, ylim = c(min(data1[1:n_plot,]),max(data1[1:n_plot,])), axes = T,
+                main = title_plot, xlab = xtitle,
+                ylab = ytitle)
+        if(!is.null(data2)){
+            matplot( x = X, t(data2[1:n_plot,]), type = 'l', lty = 1,
+            col = c('steelblue','steelblue1','skyblue3', 'lightsteelblue1'), lwd = 3, add = T)
+            legend("topright", legend=c(legend_name1, legend_name2), col = c('darkolivegreen','steelblue'), lty = c(1,1), lwd = 3)
+        }
+      }
+      else if(n_plot == 1){
+        x11(height=4)
+        matplot( x = X, (data1[1:n_plot,]), type = 'l', lty = 1,
+                col = c('darkolivegreen','darkgreen','darkolivegreen4','forestgreen'),
+                lwd = 3, ylim = c(min(data1[1:n_plot,]),max(data1[1:n_plot,])), axes = T,
+                main = title_plot, xlab = xtitle,
+                ylab = ytitle)
+       if(!is.null(data2)){
+           matplot( x = X, (data2[1:n_plot,]), type = 'l', lty = 1,
+           col = c('steelblue','steelblue1','skyblue3', 'lightsteelblue1'), lwd = 3, add = T)
+           legend("topright", legend=c(legend_name1, legend_name2), col = c('darkolivegreen','steelblue'), lty = c(1,1), lwd = 3)
+       }
+      }
+    }
+    else{ #Plot with bands representing the domanin of the spline
+        knots <- c(range[1],
+                 range[1] + (internal_knots[1]-range[1])/2,
+                 internal_knots,
+                 range[2] - (range[2]-internal_knots[length(internal_knots)])/2,
+                 range[2] )
+        knots_name = round(knots, digits = 2)
+        names <- rep("", length(knots_name))
+        for (i in 1:length(knots_name)) {
+          names[i] <- paste0(knots_name[i])
+        }
+        names_y = round(seq(min(data1[1:n_plot,]), max(data1[1:n_plot,]), length.out = 10), digits = 2)
+        if(n_plot > 1){
+          x11(height=4)
+            matplot(x = X, t(data1[1:n_plot,]), type = 'l', lty = 1,
+                    col = c('darkolivegreen','darkgreen','darkolivegreen4','forestgreen'),
+                    lwd = 3, ylim = c(min(data1[1:n_plot,]),max(data1[1:n_plot,])), axes = F,
+                    main = title_plot, xlab = xtitle,
+                    ylab = ytitle)
+            if(!is.null(data2)){
+                matplot( x = X, t(data2[1:n_plot,]), type = 'l', lty = 1,
+                col = c('steelblue','steelblue1','skyblue3', 'lightsteelblue1'), lwd = 3, add = T)
+                legend("topright", legend=c(legend_name1, legend_name2), col = c('darkolivegreen','steelblue'), lty = c(1,1), lwd = 3)
+            }
+            abline(v = knots, lty = 2, col = 'black')
+                if(!is.null(highlight_band1)){
+                  for(i in c(highlight_band1, highlight_band1[length(highlight_band1)]+1) )
+                    abline(v = knots[i], lty = 2, col = 'red')
+                }
+                if(!is.null(highlight_band2)){
+                  for(i in c(highlight_band2[1]-1,highlight_band2) )
+                    abline(v = knots[i], lty = 2, col = 'red')
+                }
+            mtext(text = names, side=1, line=0.3, at = knots , las=2, cex=0.7)
+            mtext(text = names_y, side=2, line=0.3, at=names_y, las=1, cex=0.9)
+        }
+        else if(n_plot == 1){
+            x11(height=4)
+              matplot(x = X, (data1[1:n_plot,]), type = 'l', lty = 1,
+                      col = c('darkolivegreen','darkgreen','darkolivegreen4','forestgreen'),
+                      lwd = 3, ylim = c(min(data1[1:n_plot,]),max(data1[1:n_plot,])), axes = F,
+                      main = title_plot, xlab = xtitle,
+                      ylab = ytitle)
+              if(!is.null(data2)){
+                  matplot( x = X, (data2[1:n_plot,]), type = 'l', lty = 1,
+                  col = c('steelblue','steelblue1','skyblue3', 'lightsteelblue1'), lwd = 3, add = T)
+                  legend("topright", legend=c(legend_name1, legend_name2), col = c('darkolivegreen','steelblue'), lty = c(1,1), lwd = 3)
+              }
+              abline(v = knots, lty = 2, col = 'black')
+                  if(!is.null(highlight_band1)){
+                    for(i in c(highlight_band1, highlight_band1[length(highlight_band1)]+1) )
+                      abline(v = knots[i], lty = 2, col = 'red')
+                  }
+                  if(!is.null(highlight_band2)){
+                    for(i in c(highlight_band2[1]-1,highlight_band2) )
+                      abline(v = knots[i], lty = 2, col = 'red')
+                  }
+              mtext(text = names, side=1, line=0.3, at = knots , las=2, cex=0.7)
+              mtext(text = names_y, side=2, line=0.3, at=names_y, las=1, cex=0.9)
+        }
+    }
+  }
+  else
+    stop("The number of curves to be plotted has to be positive.")
 }
