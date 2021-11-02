@@ -10,9 +10,9 @@ ACheatmap_hcl(
   col.n_breaks = 64,
   use_x11_device = TRUE,
   remove_diag = FALSE,
-  title = "title",
-  x_label = "x_axis",
-  y_label = "y_axis",
+  main = " ",
+  x_label = " ",
+  y_label = " ",
   horizontal = TRUE
 )
 }
@@ -27,7 +27,7 @@ ACheatmap_hcl(
 
 \item{remove_diag}{boolean, if the diagonal has to be removed or not.}
 
-\item{title}{the title of the plot.}
+\item{main}{the title of the plot.}
 
 \item{x_label}{the name of the x-axis in the plot.}
 

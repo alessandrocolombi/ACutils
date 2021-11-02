@@ -8,9 +8,9 @@ boxplot_from_matrix(
   data,
   use_x11_device = TRUE,
   use_ggplot = TRUE,
-  title = "Title",
-  x_label = "x_axis",
-  y_label = "y_axis"
+  main = " ",
+  x_label = " ",
+  y_label = " "
 )
 }
 \arguments{
@@ -20,7 +20,7 @@ boxplot_from_matrix(
 
 \item{use_ggplot}{if boxplots should be done using ggplot or not.}
 
-\item{title}{the title of the plot.}
+\item{main}{the title of the plot.}
 
 \item{x_label}{the name of the x-axis in the plot.}
 
