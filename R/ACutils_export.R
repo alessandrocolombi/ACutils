@@ -475,11 +475,7 @@ ACplot_graph = function(G, col.links = "#3B9AB2", col.zeros = "grey95", graph.si
 
   ACheatmap(Mat = G, center_value = 0.5, col.lower = col.zeros, col.upper = col.links, col.n_breaks = 63,
             use_x11_device = use_x11_device, main = main, x_label = x_label, y_label = y_label, horizontal=FALSE )
-
-
 }
-
-
 
 
 #' Plot undirected network from matrix or vector
@@ -504,3 +500,200 @@ ACplot_network = function(G, labels.name = NULL, col.nodes = NULL, col.links = N
   GGally::ggnet2(net, label=TRUE, size = node.size, label.size = label.size, color=col.nodes, label.color = 'white',
          edge.color=col.links)
 }
+
+
+#' Non Central Student t - Density 
+#'
+#' \loadmathjax This function evaluates the density of a Non Central Student t in a given point. Such a distribution is defined as follow:
+#' \mjsdeqn{X~\sim~nct(n_{0},\mu_{0},\gamma_{0})} if 
+#' \mjtdeqn{$$\begin{eqnarray*}f(X|n_{0},\mu_{0},\gamma_{0}) = \frac{\Gamma(\frac{n_{0}+1}{2})}{\Gamma(\frac{n_{0}}{2})}\frac{1}{\sqrt{\pi\gamma_{0}n_{0}}}\left(1+\frac{1}{n_{0}}(\frac{x-\mu_{0}}{\gamma})^{2}\right)^{-\frac{n_{0}+1}{2}} {eqnarray*}$$}{\begin{eqnarray*}f(X|n_{0},\mu_{0},\gamma_{0}) = \frac{\Gamma(\frac{n_{0}+1}{2})}{\Gamma(\frac{n_{0}}{2})}\frac{1}{\sqrt{\pi\gamma_{0}n_{0}}}\left(1+\frac{1}{n_{0}}(\frac{x-\mu_{0}}{\gamma})^{2}\right)^{-\frac{n_{0}+1}{2}}  \end{eqnarray*}}{\begin{eqnarray*} f(X|n_{0},\mu_{0},\gamma_{0}) = \frac{\Gamma(\frac{n_{0}+1}{2})}{\Gamma(\frac{n_{0}}{2})}\frac{1}{\sqrt{\pi\gamma_{0}n_{0}}}\left(1+\frac{1}{n_{0}}(\frac{x-\mu_{0}}{\gamma})^{2}\right)^{-\frac{n_{0}+1}{2}}  \end{eqnarray*}}
+#' where \mjseqn{n_{0}} are the degree of freedom, \mjseqn{\mu_{0}} is the location parameter and \mjseqn{\gamma_{0}} is the scale parameter. The usual t density can be recovered by placing \mjseqn{\mu_{0}=0} and \mjseqn{\gamma_{0} = 1}.
+#' @param x the point where to evaluate the density.
+#' @param n0 the degree of fredoom.
+#' @param mu0 the location parameter.
+#' @param gamma0 the scale parameter.
+#' @return scalar representing the evaluation of the density at x
+#' @export
+dnct = function( x, n0, mu0, gamma0 )
+{
+  if(gamma0 <= 0)
+    stop("The scale parameter has to be strictly positive.")
+  return( 1/gamma0 * dt(x = (x-mu0)/gamma0, df = n0 ) )
+}
+
+#' Non Central Student t - Random Number Generator 
+#'
+#' This function generates a random number distributed as Non Central Student t. See \code{\link{dnct}} for the definition of such a distribution.
+#' @param n the number of points to be generated.
+#' @inheritParams ACheatmap
+#' @return scalar generated from Non Central Student t.
+#' @export
+rnct = function( n = 1, n0, mu0, gamma0 )
+{
+  if(gamma0 <= 0)
+    stop("The scale parameter has to be strictly positive.")
+  return( (rt(n = n, df = n0) - mu0)/gamma0 )  
+}
+
+
+#' Plot the desity function 
+#'
+#' This function plots the density function of some know distributions. Current version, does not allow to overlap different plots
+#' if use_ggplot is active. Though, it is possible when using standard plots. In such a case, the legend can be added a posteriori.
+#' @param ... the list of parameters needed by the distribution specified in dist.
+#' @param dist string with the name of the density to be plotted. Possibilities are, 
+#' \code{"norm"} (requires mean and sd), \code{"gamma"} (requires shape and rate), \code{"chi-sq"} (requires dof), \code{"exp"} (requires rate),
+#' \code{"t"} (requires dop), \code{"Fisher"} (requires dof1 and dof2), \code{"nct"} (requires degree of freedom, location and scale. See \code{\link{dnct}} for the definition of such a distribution.)
+#' @param xlim set the range of x-axis. Not used if add is TRUE.
+#' @param ylim set the range of y-axis. Not used if add is TRUE.
+#' @param col set color of density line.
+#' @param add boolean, if current plot has to be added to previous plot or not.
+#' @inheritParams ACheatmap
+#' @return this function does not return anything
+#' @export
+plot_density = function( ..., dist, main = " ", x_label = " ", y_label = " ", xlim = NULL, ylim = NULL, 
+                         col = "gray48", use_x11_device = TRUE, use_ggplot = FALSE, add = FALSE )
+{
+  #check density name
+  if(!(dist == "norm" || dist == "gamma" || dist == "chi-sq" || dist == "exp" || dist == "t" || dist == "Fisher" || dist == "nct"))
+    stop("Unknown distribution requested, the only one availables are norm, gamma, chi-sq, exp, t, Fisher, nct")
+
+  #read ...
+  l = list(...)
+  L = length(l)
+
+  npoints = 100000
+
+  if(dist == "norm"){
+    if(L < 2){
+      stop("norm density requires 2 parameters, mean and sd.")
+    }else if(L > 2){
+      warning("norm density requires 2 parameters, mean and sd but more has been provided. Use only the first two.")
+    }else{
+      y = rnorm(n = npoints, mean = l[[1]], sd = l[[2]])
+    }
+
+  }else if(dist == "gamma"){
+    if(L < 2){
+      stop("gamma density requires 2 parameters, shape and rate.")
+    }else if(L > 2){
+      warning("gamma density requires 2 parameters, shape and rate but more has been provided. Use only the first two.")
+    }else{
+      y = rgamma(n = npoints, shape = l[[1]], rate = l[[2]])
+    }
+
+  }else if(dist == "chi-sq"){
+    if(L < 1){
+      stop("gamma density requires 1 parameter, the degree of freedom.")
+    }else if(L > 1){
+      warning("gamma density requires 1 parameter, the degree of freedom but more has been provided. Use only the first one.")
+    }else{
+      y = rchisq(n = npoints, df = l[[1]])
+    }
+
+  }else if(dist == "exp"){
+    if(L < 1){
+      stop("exp density requires 1 parameter, rate.")
+    }else if(L > 1){
+      warning("gamma density requires 1 parameter, rate but more has been provided. Use only the first one.")
+    }else{
+      y = rexp(n = npoints, rate = l[[1]])
+    }
+
+  }else if(dist == "t"){
+    if(L < 1){
+      stop("student t density requires 1 parameter, the degree of freedom.")
+    }else if(L > 1){
+      warning("gamma density requires 1 parameter, the degree of freedom but more has been provided. Use only the first one.")
+    }else{
+      y = rt(n = npoints, df = l[[1]])
+    }
+
+  }else if(dist == "Fisher"){
+    if(L < 2){
+      stop("Fisher density requires 2 parameters, df1 and df2.")
+    }else if(L > 2){
+      warning("Fisher density requires 2 parameters, df1 and df2 but more has been provided. Use only the first two.")
+    }else{
+      y = rf(n = npoints, df1 = l[[1]], df2 = l[[2]])
+    }
+
+  }else if(dist == "nct"){
+    if(L < 3){
+      stop("nct density requires 3 parameters, degree of freedom, location and scale.")
+    }else if(L > 3){
+      warning("nct density requires 2 parameters, degree of freedom, location and scale but more has been provided. Use only the first three.")
+    }else{
+      y = ACutils:::rnct(n = npoints, n0 = l[[1]], mu0 = l[[2]], gamma0 = l[[3]])
+    }
+
+  }else{
+    stop("Unknown distribution requested, the only one availables are norm, gamma, chi-sq, exp, t, Fisher, nct")
+  }
+
+  #Density estimation
+  density = density(y)
+
+  #check and set xlim and ylim
+  if(!is.null(xlim)){
+    if(length(xlim) != 2){
+      warning("xlim has not length equal to 2")
+      xlim = NULL  
+    }
+    if(xlim[2]<xlim[1]){
+      warning("xlim[2] can not be smaller than xlim[1]")
+      xlim = NULL  
+    }
+  }
+  if(is.null(xlim)){
+    xlim = c(0,0)
+    xlim[1] = min(density$x)
+    xlim[2] = max(density$x)
+    range = xlim[2] - xlim[1]
+    xlim[1] = xlim[1] - range/10
+    xlim[2] = xlim[2] + range/10
+  }
+
+  if(!is.null(ylim)){
+    if(length(ylim) != 2){
+      warning("ylim has not length equal to 2")
+      ylim = NULL  
+    }
+    if(ylim[2]<ylim[1]){
+      warning("ylim[2] can not be smaller than ylim[1]")
+      ylim = NULL  
+    }
+  }
+  if(is.null(ylim)){
+    ylim = c(0,0)
+    ylim[1] = min(density$y)
+    ylim[2] = max(density$y)
+    range = ylim[2] - ylim[1]
+    ylim[1] = ylim[1] - range/10
+    ylim[2] = ylim[2] + range/10
+  }
+
+
+  #Plot
+  if(use_x11_device){
+    x11()
+  }
+  if(use_ggplot){
+    #library(ggplot2)
+    df = data.frame(  value=y  )
+    title_theme = ggplot2::labs(title=main, x=x_label, y=y_label) #FA SCHIFO
+    bg = ggplot2::theme_bw() #ggplot2::theme(panel.background = ggplot2::element_blank())
+    ggplot_obj = ggplot2::ggplot(data = df, ggplot2::aes(x = value), y = value ) + ggplot2::geom_density( color = col ) + title_theme + bg
+
+    # non so come aggiungere i plot in questo caso!
+  }else{
+    if(!add){ #new plot
+      plot(x = density$x, y = density$y, main = main, xlab = x_label, ylab = y_label, col = col, type = 'l', lwd = 2, xlim = xlim, ylim = ylim)  
+    }else{
+      points(x = density$x, y = density$y, main = main, xlab = x_label, ylab = y_label, col = col, type = 'l', lwd = 2)
+    }
+    
+  }
+}
+
+
