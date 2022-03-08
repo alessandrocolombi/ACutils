@@ -506,7 +506,7 @@ ACplot_network = function(G, labels.name = NULL, col.nodes = NULL, col.links = N
 #'
 #' \loadmathjax This function evaluates the density of a Non Central Student t in a given point. Such a distribution is defined as follow:
 #' \mjsdeqn{X~\sim~nct(n_{0},\mu_{0},\gamma_{0})} if 
-#' \mjtdeqn{$$\begin{eqnarray*}f(X|n_{0},\mu_{0},\gamma_{0}) = \frac{\Gamma(\frac{n_{0}+1}{2})}{\Gamma(\frac{n_{0}}{2})}\frac{1}{\sqrt{\pi\gamma_{0}n_{0}}}\left(1+\frac{1}{n_{0}}(\frac{x-\mu_{0}}{\gamma})^{2}\right)^{-\frac{n_{0}+1}{2}} {eqnarray*}$$}{\begin{eqnarray*}f(X|n_{0},\mu_{0},\gamma_{0}) = \frac{\Gamma(\frac{n_{0}+1}{2})}{\Gamma(\frac{n_{0}}{2})}\frac{1}{\sqrt{\pi\gamma_{0}n_{0}}}\left(1+\frac{1}{n_{0}}(\frac{x-\mu_{0}}{\gamma})^{2}\right)^{-\frac{n_{0}+1}{2}}  \end{eqnarray*}}{\begin{eqnarray*} f(X|n_{0},\mu_{0},\gamma_{0}) = \frac{\Gamma(\frac{n_{0}+1}{2})}{\Gamma(\frac{n_{0}}{2})}\frac{1}{\sqrt{\pi\gamma_{0}n_{0}}}\left(1+\frac{1}{n_{0}}(\frac{x-\mu_{0}}{\gamma})^{2}\right)^{-\frac{n_{0}+1}{2}}  \end{eqnarray*}}
+#' \mjtdeqn{$$\begin{eqnarray*}f(X|n_{0},\mu_{0},\gamma_{0}) = \frac{\Gamma(\frac{n_{0}+1}{2})}{\Gamma(\frac{n_{0}}{2})}\frac{1}{\sqrt{\pi\gamma_{0}n_{0}}}\left(1+\frac{1}{n_{0}}(\frac{x-\mu_{0}}{\gamma_{0}})^{2}\right)^{-\frac{n_{0}+1}{2}} {eqnarray*}$$}{\begin{eqnarray*}f(X|n_{0},\mu_{0},\gamma_{0}) = \frac{\Gamma(\frac{n_{0}+1}{2})}{\Gamma(\frac{n_{0}}{2})}\frac{1}{\sqrt{\pi\gamma_{0}n_{0}}}\left(1+\frac{1}{n_{0}}(\frac{x-\mu_{0}}{\gamma_{0}})^{2}\right)^{-\frac{n_{0}+1}{2}}  \end{eqnarray*}}{\begin{eqnarray*} f(X|n_{0},\mu_{0},\gamma_{0}) = \frac{\Gamma(\frac{n_{0}+1}{2})}{\Gamma(\frac{n_{0}}{2})}\frac{1}{\sqrt{\pi\gamma_{0}n_{0}}}\left(1+\frac{1}{n_{0}}(\frac{x-\mu_{0}}{\gamma_{0}})^{2}\right)^{-\frac{n_{0}+1}{2}}  \end{eqnarray*}}
 #' where \mjseqn{n_{0}} are the degree of freedom, \mjseqn{\mu_{0}} is the location parameter and \mjseqn{\gamma_{0}} is the scale parameter. The usual t density can be recovered by placing \mjseqn{\mu_{0}=0} and \mjseqn{\gamma_{0} = 1}.
 #' @param x the point where to evaluate the density.
 #' @param n0 the degree of fredoom.
@@ -532,18 +532,22 @@ rnct = function( n = 1, n0, mu0, gamma0 )
 {
   if(gamma0 <= 0)
     stop("The scale parameter has to be strictly positive.")
-  return( (rt(n = n, df = n0) - mu0)/gamma0 )  
+  return(  gamma0*rt(n = n, df = n0) + mu0  )  
 }
 
 
 #' Plot the desity function 
 #'
-#' This function plots the density function of some know distributions. Current version, does not allow to overlap different plots
+#' \loadmathjax This function plots the density function of some know distributions. Current version, does not allow to overlap different plots
 #' if use_ggplot is active. Though, it is possible when using standard plots. In such a case, the legend can be added a posteriori.
 #' @param ... the list of parameters needed by the distribution specified in dist.
 #' @param dist string with the name of the density to be plotted. Possibilities are, 
-#' \code{"norm"} (requires mean and sd), \code{"gamma"} (requires shape and rate), \code{"chi-sq"} (requires dof), \code{"exp"} (requires rate),
-#' \code{"t"} (requires dop), \code{"Fisher"} (requires dof1 and dof2), \code{"nct"} (requires degree of freedom, location and scale. See \code{\link{dnct}} for the definition of such a distribution.)
+#' \code{"norm"} (requires mean and sd), \code{"gamma"} (requires shape and rate), \code{"inv-gamma"} (requires shape and scale, see below), \code{"chi-sq"} (requires dof), \code{"exp"} (requires rate),
+#' \code{"t"} (requires dop), \code{"Fisher"} (requires dof1 and dof2), \code{"nct"} (requires degree of freedom, location and scale. See \code{\link{dnct}} for the definition of such a distribution.).
+#' \code{"laplace"} (requires location and scale).
+#' The \code{"inv-gamma"} distribution is defined as follow:
+#' \mjsdeqn{X~\sim~inv-gamma(shape = \alpha, scale = \beta)} if 
+#' \mjtdeqn{$$\begin{eqnarray*}f(X|\alpha,\beta) = \frac{\beta^{\alpha}}{\Gamma(\alpha)}\left(\frac{1}{x}\right)^{\alpha+1}e^{- \frac{\beta}{x}}{eqnarray*}$$}{\begin{eqnarray*}f(X|\alpha,\beta) = \frac{\beta^{\alpha}}{\Gamma(\alpha)}\left(\frac{1}{x}\right)^{\alpha+1}e^{- \frac{\beta}{x}}\end{eqnarray*}}{\begin{eqnarray*} f(X|\alpha,\beta) = \frac{\beta^{\alpha}}{\Gamma(\alpha)}\left(\frac{1}{x}\right)^{\alpha+1}e^{- \frac{\beta}{x}}\end{eqnarray*}}
 #' @param xlim set the range of x-axis. Not used if add is TRUE.
 #' @param ylim set the range of y-axis. Not used if add is TRUE.
 #' @param col set color of density line.
@@ -555,8 +559,8 @@ plot_density = function( ..., dist, main = " ", x_label = " ", y_label = " ", xl
                          col = "gray48", use_x11_device = TRUE, use_ggplot = FALSE, add = FALSE )
 {
   #check density name
-  if(!(dist == "norm" || dist == "gamma" || dist == "chi-sq" || dist == "exp" || dist == "t" || dist == "Fisher" || dist == "nct"))
-    stop("Unknown distribution requested, the only one availables are norm, gamma, chi-sq, exp, t, Fisher, nct")
+  if(!(dist == "norm" || dist == "gamma" || dist == "inv-gamma" || dist == "chi-sq" || dist == "exp" || dist == "t" || dist == "Fisher" || dist == "nct" || dist == "laplace"))
+    stop("Unknown distribution requested, the only one availables are norm, gamma, chi-sq, exp, t, Fisher, nct, laplace")
 
   #read ...
   l = list(...)
@@ -580,6 +584,15 @@ plot_density = function( ..., dist, main = " ", x_label = " ", y_label = " ", xl
       warning("gamma density requires 2 parameters, shape and rate but more has been provided. Use only the first two.")
     }else{
       y = rgamma(n = npoints, shape = l[[1]], rate = l[[2]])
+    }
+
+  }else if(dist == "inv-gamma"){
+    if(L < 2){
+      stop("gamma density requires 2 parameters, shape and scale")
+    }else if(L > 2){
+      warning("gamma density requires 2 parameters, shape and scale but more has been provided. Use only the first two.")
+    }else{
+      y = 1 / ( rgamma(n = npoints, shape = l[[1]], rate = l[[2]]) ) 
     }
 
   }else if(dist == "chi-sq"){
@@ -625,6 +638,15 @@ plot_density = function( ..., dist, main = " ", x_label = " ", y_label = " ", xl
       warning("nct density requires 2 parameters, degree of freedom, location and scale but more has been provided. Use only the first three.")
     }else{
       y = ACutils:::rnct(n = npoints, n0 = l[[1]], mu0 = l[[2]], gamma0 = l[[3]])
+    }
+
+  }else if(dist == "laplace"){
+    if(L < 2){
+      stop("laplace density requires 2 parameters, location and scale.")
+    }else if(L > 2){
+      warning("laplace density requires 2 parameters, location and scale but more has been provided. Use only the first two.")
+    }else{
+      y = ExtDist::rLaplace(n = npoints, mu = l[[1]], b = l[[2]])
     }
 
   }else{

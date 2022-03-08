@@ -22,8 +22,12 @@ plot_density(
 \item{...}{the list of parameters needed by the distribution specified in dist.}
 
 \item{dist}{string with the name of the density to be plotted. Possibilities are,
-\code{"norm"} (requires mean and sd), \code{"gamma"} (requires shape and rate), \code{"chi-sq"} (requires dof), \code{"exp"} (requires rate),
-\code{"t"} (requires dop), \code{"Fisher"} (requires dof1 and dof2), \code{"nct"} (requires degree of freedom, location and scale. See \code{\link{dnct}} for the definition of such a distribution.)}
+\code{"norm"} (requires mean and sd), \code{"gamma"} (requires shape and rate), \code{"inv-gamma"} (requires shape and scale, see below), \code{"chi-sq"} (requires dof), \code{"exp"} (requires rate),
+\code{"t"} (requires dop), \code{"Fisher"} (requires dof1 and dof2), \code{"nct"} (requires degree of freedom, location and scale. See \code{\link{dnct}} for the definition of such a distribution.).
+\code{"laplace"} (requires location and scale).
+The \code{"inv-gamma"} distribution is defined as follow:
+\mjsdeqn{X~\sim~inv-gamma(shape = \alpha, scale = \beta)} if
+\mjtdeqn{$$\begin{eqnarray*}f(X|\alpha,\beta) = \frac{\beta^{\alpha}}{\Gamma(\alpha)}\left(\frac{1}{x}\right)^{\alpha+1}e^{- \frac{\beta}{x}}{eqnarray*}$$}{\begin{eqnarray*}f(X|\alpha,\beta) = \frac{\beta^{\alpha}}{\Gamma(\alpha)}\left(\frac{1}{x}\right)^{\alpha+1}e^{- \frac{\beta}{x}}\end{eqnarray*}}{\begin{eqnarray*} f(X|\alpha,\beta) = \frac{\beta^{\alpha}}{\Gamma(\alpha)}\left(\frac{1}{x}\right)^{\alpha+1}e^{- \frac{\beta}{x}}\end{eqnarray*}}}
 
 \item{main}{the title of the plot.}
 
@@ -45,6 +49,6 @@ plot_density(
 this function does not return anything
 }
 \description{
-This function plots the density function of some know distributions. Current version, does not allow to overlap different plots
+\loadmathjax This function plots the density function of some know distributions. Current version, does not allow to overlap different plots
 if use_ggplot is active. Though, it is possible when using standard plots. In such a case, the legend can be added a posteriori.
 }
