@@ -502,10 +502,10 @@ ACplot_network = function(G, labels.name = NULL, col.nodes = NULL, col.links = N
 }
 
 
-#' Non Central Student t - Density 
+#' Non Central Student t - Density
 #'
 #' \loadmathjax This function evaluates the density of a Non Central Student t in a given point. Such a distribution is defined as follow:
-#' \mjsdeqn{X~\sim~nct(n_{0},\mu_{0},\gamma_{0})} if 
+#' \mjsdeqn{X~\sim~nct(n_{0},\mu_{0},\gamma_{0})} if
 #' \mjtdeqn{$$\begin{eqnarray*}f(X|n_{0},\mu_{0},\gamma_{0}) = \frac{\Gamma(\frac{n_{0}+1}{2})}{\Gamma(\frac{n_{0}}{2})}\frac{1}{\sqrt{\pi\gamma_{0}n_{0}}}\left(1+\frac{1}{n_{0}}(\frac{x-\mu_{0}}{\gamma_{0}})^{2}\right)^{-\frac{n_{0}+1}{2}} {eqnarray*}$$}{\begin{eqnarray*}f(X|n_{0},\mu_{0},\gamma_{0}) = \frac{\Gamma(\frac{n_{0}+1}{2})}{\Gamma(\frac{n_{0}}{2})}\frac{1}{\sqrt{\pi\gamma_{0}n_{0}}}\left(1+\frac{1}{n_{0}}(\frac{x-\mu_{0}}{\gamma_{0}})^{2}\right)^{-\frac{n_{0}+1}{2}}  \end{eqnarray*}}{\begin{eqnarray*} f(X|n_{0},\mu_{0},\gamma_{0}) = \frac{\Gamma(\frac{n_{0}+1}{2})}{\Gamma(\frac{n_{0}}{2})}\frac{1}{\sqrt{\pi\gamma_{0}n_{0}}}\left(1+\frac{1}{n_{0}}(\frac{x-\mu_{0}}{\gamma_{0}})^{2}\right)^{-\frac{n_{0}+1}{2}}  \end{eqnarray*}}
 #' where \mjseqn{n_{0}} are the degree of freedom, \mjseqn{\mu_{0}} is the location parameter and \mjseqn{\gamma_{0}} is the scale parameter. The usual t density can be recovered by placing \mjseqn{\mu_{0}=0} and \mjseqn{\gamma_{0} = 1}.
 #' @param x the point where to evaluate the density.
@@ -518,10 +518,10 @@ dnct = function( x, n0, mu0, gamma0 )
 {
   if(gamma0 <= 0)
     stop("The scale parameter has to be strictly positive.")
-  return( 1/gamma0 * dt(x = (x-mu0)/gamma0, df = n0 ) )
+  return( 1/sqrt(gamma0) * dt(x = (x-mu0)/gamma0, df = n0 ) )
 }
 
-#' Non Central Student t - Random Number Generator 
+#' Non Central Student t - Random Number Generator
 #'
 #' This function generates a random number distributed as Non Central Student t. See \code{\link{dnct}} for the definition of such a distribution.
 #' @param n the number of points to be generated.
@@ -532,21 +532,21 @@ rnct = function( n = 1, n0, mu0, gamma0 )
 {
   if(gamma0 <= 0)
     stop("The scale parameter has to be strictly positive.")
-  return(  gamma0*rt(n = n, df = n0) + mu0  )  
+  return(  gamma0*rt(n = n, df = n0) + mu0  )
 }
 
 
-#' Plot the desity function 
+#' Plot the desity function
 #'
 #' \loadmathjax This function plots the density function of some know distributions. Current version, does not allow to overlap different plots
 #' if use_ggplot is active. Though, it is possible when using standard plots. In such a case, the legend can be added a posteriori.
 #' @param ... the list of parameters needed by the distribution specified in dist.
-#' @param dist string with the name of the density to be plotted. Possibilities are, 
+#' @param dist string with the name of the density to be plotted. Possibilities are,
 #' \code{"norm"} (requires mean and sd), \code{"gamma"} (requires shape and rate), \code{"inv-gamma"} (requires shape and scale, see below), \code{"chi-sq"} (requires dof), \code{"exp"} (requires rate),
 #' \code{"t"} (requires dop), \code{"Fisher"} (requires dof1 and dof2), \code{"nct"} (requires degree of freedom, location and scale. See \code{\link{dnct}} for the definition of such a distribution.).
 #' \code{"laplace"} (requires location and scale).
 #' The \code{"inv-gamma"} distribution is defined as follow:
-#' \mjsdeqn{X~\sim~inv-gamma(shape = \alpha, scale = \beta)} if 
+#' \mjsdeqn{X~\sim~inv-gamma(shape = \alpha, scale = \beta)} if
 #' \mjtdeqn{$$\begin{eqnarray*}f(X|\alpha,\beta) = \frac{\beta^{\alpha}}{\Gamma(\alpha)}\left(\frac{1}{x}\right)^{\alpha+1}e^{- \frac{\beta}{x}}{eqnarray*}$$}{\begin{eqnarray*}f(X|\alpha,\beta) = \frac{\beta^{\alpha}}{\Gamma(\alpha)}\left(\frac{1}{x}\right)^{\alpha+1}e^{- \frac{\beta}{x}}\end{eqnarray*}}{\begin{eqnarray*} f(X|\alpha,\beta) = \frac{\beta^{\alpha}}{\Gamma(\alpha)}\left(\frac{1}{x}\right)^{\alpha+1}e^{- \frac{\beta}{x}}\end{eqnarray*}}
 #' @param xlim set the range of x-axis. Not used if add is TRUE.
 #' @param ylim set the range of y-axis. Not used if add is TRUE.
@@ -555,7 +555,7 @@ rnct = function( n = 1, n0, mu0, gamma0 )
 #' @inheritParams ACheatmap
 #' @return this function does not return anything
 #' @export
-plot_density = function( ..., dist, main = " ", x_label = " ", y_label = " ", xlim = NULL, ylim = NULL, 
+plot_density = function( ..., dist, main = " ", x_label = " ", y_label = " ", xlim = NULL, ylim = NULL,
                          col = "gray48", use_x11_device = TRUE, use_ggplot = FALSE, add = FALSE )
 {
   #check density name
@@ -592,7 +592,7 @@ plot_density = function( ..., dist, main = " ", x_label = " ", y_label = " ", xl
     }else if(L > 2){
       warning("gamma density requires 2 parameters, shape and scale but more has been provided. Use only the first two.")
     }else{
-      y = 1 / ( rgamma(n = npoints, shape = l[[1]], rate = l[[2]]) ) 
+      y = 1 / ( rgamma(n = npoints, shape = l[[1]], rate = l[[2]]) )
     }
 
   }else if(dist == "chi-sq"){
@@ -660,11 +660,11 @@ plot_density = function( ..., dist, main = " ", x_label = " ", y_label = " ", xl
   if(!is.null(xlim)){
     if(length(xlim) != 2){
       warning("xlim has not length equal to 2")
-      xlim = NULL  
+      xlim = NULL
     }
     if(xlim[2]<xlim[1]){
       warning("xlim[2] can not be smaller than xlim[1]")
-      xlim = NULL  
+      xlim = NULL
     }
   }
   if(is.null(xlim)){
@@ -679,11 +679,11 @@ plot_density = function( ..., dist, main = " ", x_label = " ", y_label = " ", xl
   if(!is.null(ylim)){
     if(length(ylim) != 2){
       warning("ylim has not length equal to 2")
-      ylim = NULL  
+      ylim = NULL
     }
     if(ylim[2]<ylim[1]){
       warning("ylim[2] can not be smaller than ylim[1]")
-      ylim = NULL  
+      ylim = NULL
     }
   }
   if(is.null(ylim)){
@@ -710,11 +710,11 @@ plot_density = function( ..., dist, main = " ", x_label = " ", y_label = " ", xl
     # non so come aggiungere i plot in questo caso!
   }else{
     if(!add){ #new plot
-      plot(x = density$x, y = density$y, main = main, xlab = x_label, ylab = y_label, col = col, type = 'l', lwd = 2, xlim = xlim, ylim = ylim)  
+      plot(x = density$x, y = density$y, main = main, xlab = x_label, ylab = y_label, col = col, type = 'l', lwd = 2, xlim = xlim, ylim = ylim)
     }else{
       points(x = density$x, y = density$y, main = main, xlab = x_label, ylab = y_label, col = col, type = 'l', lwd = 2)
     }
-    
+
   }
 }
 
