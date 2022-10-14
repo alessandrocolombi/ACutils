@@ -718,4 +718,171 @@ plot_density = function( ..., dist, main = " ", x_label = " ", y_label = " ", xl
   }
 }
 
+#' sum_check
+#' check if elements in a vector sum to an expected value. Elements of the vector
+#'             are supposed to be computed as expected_sum*p. If expectations are not respected
+#'             return a corrected version of vec, according to p
+#'
+#' @param vec vector to integer value to be checked
+#' @param expected_sum expected value for sum(vec)
+#' @param p theoretical weights applied to divide expected_sum in vec's elements
+#' @return corrected version of vec (if needed)
+#' @import dplyr
+#' @export
+sum_check <- function(vec, expected_sum, p){
+  if( !dplyr::near( sum(p), 1) )
+    stop("weights must sum to 1!")
+
+  round_diff = vec - expected_sum*p # large if value in vec is OVER-estimate
+
+  if(sum(vec) > expected_sum ){
+    i_max = which.max(round_diff)
+    vec[i_max] = vec[i_max] - 1
+    vec = sum_check(vec, expected_sum, p)
+  }
+  if(sum(vec) < expected_sum){
+    i_min = which.min(round_diff)
+    vec[i_min] = vec[i_min] + 1
+    vec = sum_check(vec, expected_sum, p)
+  }
+
+  return(vec)
+}
+
+#' dmix
+#'
+#' density of a mixture of gaussian distributions
+#' @param x point or vector of values where I want to evaluate the density
+#' @param w vector of weights of the
+#' @param mu_vec vector of mean for the gaussian distribution
+#' @param sigma_vec vector of standard deviation for the gaussian distribution
+#' @return named matrix with (Inf, estimate, Sup)
+#' @import dplyr
+#' @export
+dmix <- function(x, w_j, mu_vec, sigma_vec){
+  if( !dplyr::near(sum(w_j), 1) )
+    stop("weigths don't sum to one")
+
+  if(length(w_j) != length(mu_vec) || length(w_j) != length(mu_vec) )
+    stop("length of w_j, mu_vec and sigma_vec differs")
+
+  K = length(w_j)
+
+  n = length(x)
+  mix_density = numeric(n)
+
+  for(k in 1:K){
+    mix_density = mix_density + w_j[k]*dnorm(x, mu_vec[k], sigma_vec[k])
+  }
+
+  return(mix_density)
+}
+
+
+#' rmix
+#'
+#' function to extract a random sample of dimension n from a Gaussian mixture
+#' defined by the 3 vectors p, mu, sigma (that must have same length!)
+#'
+#' @param n dimension of the random sample that has to be extracted
+#' @param p vector of weights for the components of the mixture
+#' @param mu vector of means for the components
+#' @param sigma vector of standard deviations for the components
+#' @return random sample derived my the specified mixture
+#' @import dplyr
+#' @export
+rmix <- function(n, p, mu, sigma){
+  if( !dplyr::near(sum(p),1) )
+    stop("weights for the components must sum to 1")
+
+  if( length(p) != length(mu) || length(p) != length(sigma) )
+    stop("number of weights for the components must agree with the dimensions of
+         mu's vector and sigma's vector AND *mu* and *sigma* must have
+         length")
+  # rnormm cannot take 0 weighted components ==> eliminate them
+  ind_0 = which( p == 0 )
+
+  if(length(ind_0) == 0){
+    sample_p = p
+    sample_mu = mu
+    sample_sigma = sigma
+  }else{
+    sample_p = p[-ind_0]
+    sample_mu = mu[-ind_0]
+    sample_sigma = sigma[-ind_0]
+  }
+
+  n_p = sapply(sample_p, function(x){round(x*n)})
+  n_p = sum_check(n_p, n, sample_p)
+  n_p = as.vector(n_p, mode = "integer")
+
+  mix_sample = numeric(n)
+  i = 1
+  M = length(sample_p)
+
+  for(m in 1:M){
+    ind_m = seq(i, i+n_p[m]-1)
+    mix_sample[ind_m] = rnorm(n_p[m], sample_mu[m], sample_sigma[m])
+    i = i + n_p[m]
+  }
+
+  # shuffle sampled values
+  mix_sample = mix_sample[sample(n)]
+
+  return( mix_sample )
+}
+
+
+
+#' myboxplot2
+#'
+#' Useful function to produce boxplot within for loops.
+#' @param mydata [tibble] the dataset
+#' @param myexposure [string] the name of the numerical variable whose boxplot must the produced.
+#' @param myoutcome [string] the name of the categorical variable that defines the different levels. One boxplot for each level.
+#'
+#' @export
+#'
+#' @examples myboxplot2(mydata = data, myexposure =  "treatment", myoutcome =  "age")
+myboxplot2 <- function(mydata, myexposure = NULL, myoutcome){
+  if(!is.null(myexposure)){
+    bp <- ggplot(mydata, aes_(as.name(myexposure), as.name(myoutcome), fill = as.name(myexposure) )) +
+      geom_boxplot() +
+      labs(title= myoutcome ) + theme_bw() +  theme(plot.title = element_text(hjust = 0.5))
+    print(bp)
+  }else{
+    bp <- ggplot(mydata, aes_(y=as.name(myoutcome) )) +
+      geom_boxplot() +
+      labs(title= myoutcome ) + theme_bw() +  theme(plot.title = element_text(hjust = 0.5))
+    print(bp)
+  }
+}
+
+#' mybarplot2
+#'
+#' Useful function to produce barplot within for loops.
+#' @param mydata [tibble] the dataset
+#' @param myoutcome [string] the name of the categorical variable whose counts must the shown in a barplot.
+#' @param myexposure [string] the name of the categorical variable that defines the different levels.
+#' If it is not NULL, different bar levels are produced.
+#'
+#' @return One bar for each level of level of the outcome variable. If there is exposure, an additional bar for each
+#' level of the exposure is produced.
+#' @export
+#' @examples mybarplot2(mydata = data2, myexposure =  "treatment", myoutcome =  "race")
+mybarplot2 <- function(mydata, myexposure = NULL, myoutcome){
+  if(is.null(myexposure)){
+    bp = mydata %>% ggplot( aes_(x=as.name(myoutcome) ) ) +
+      geom_bar(stat="count", position=position_dodge()) +
+      labs(title= myoutcome ) + theme_bw() +  theme(plot.title = element_text(hjust = 0.5))
+    print(bp)
+  }
+  else{
+    bp = mydata %>% ggplot( aes_(x=as.name(myoutcome), fill=as.name(myexposure) ) ) +
+      geom_bar(stat="count", position=position_dodge()) +
+      labs(title= myoutcome ) + theme_bw() +  theme(plot.title = element_text(hjust = 0.5))
+    print(bp)
+  }
+
+}
 
