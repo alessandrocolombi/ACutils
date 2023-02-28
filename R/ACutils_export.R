@@ -493,7 +493,7 @@ ACplot_network = function(G, labels.name = NULL, col.nodes = NULL, col.links = N
   if(is.null(col.links))
     col.links = rgb(212,167,48,max=255)
 
-  net = network(G.median, directed = FALSE)
+  net = network(G, directed = FALSE)
   if(use_x11_device){
     x11()
   }
